@@ -39,6 +39,12 @@
 #pragma comment( lib, "dbghelp" )
 #endif
 
+#if defined(ADDR2LINE)
+#include <cstdio>
+#include <sstream>
+#include <fstream>
+#endif
+
 namespace backtracexx
 {
 #if defined( __GNUC__ )
@@ -70,6 +76,21 @@ namespace backtracexx
 						frame.symbol = info.dli_sname;
 				}
 			}
+#if defined ( ADDR2LINE )
+            char tmpname[L_tmpnam];
+            tmpnam(tmpname);
+            ::std::stringstream cmd;
+            cmd << "addr2line -e " << frame.moduleName << " " <<
+                   std::showbase << std::hex << frame.address << " > " << tmpname;
+            if (system(cmd.str().c_str()) == 0) {
+                std::ifstream in;
+                in.open(tmpname);
+                getline(in, frame.fileName, ':');
+                in >> frame.lineNumber;
+                in.close();
+            }
+            ::std::remove(tmpname);
+#endif
 			return true;
 		}
 
@@ -105,7 +126,7 @@ namespace backtracexx
 			else
 			{
 				th->prevIp = ip;
-				th->recursionDepth = 0;
+                th->recursionDepth = 0;
 			}
 			return _URC_NO_REASON;
 		}
