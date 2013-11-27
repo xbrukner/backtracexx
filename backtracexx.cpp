@@ -185,7 +185,7 @@ namespace backtracexx
 	Trace scan( ::PCONTEXT ctx )
 	{
 #if defined( __GNUC__ )
-
+        (void)(ctx);
 		TraceHelper th;
 		//
 		//	libgcc takes care about proper stack walking.
